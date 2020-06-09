@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/marcosrachid/go-secured-api/internal/db"
+	"github.com/marcosrachid/go-secured-api/internal/models/dto"
 	"github.com/marcosrachid/go-secured-api/internal/models/repository"
 
 	"github.com/gorilla/mux"
@@ -27,7 +28,7 @@ func GetBooks(w http.ResponseWriter, r *http.Request) {
 	cur, err := collection.Find(context.TODO(), bson.M{})
 
 	if err != nil {
-		db.GetError(err, w)
+		getError(err, w, http.StatusInternalServerError)
 		return
 	}
 
@@ -51,7 +52,7 @@ func GetBooks(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := cur.Err(); err != nil {
-		log.Fatal(err)
+		getError(err, w, http.StatusInternalServerError)
 	}
 
 	json.NewEncoder(w).Encode(books) // encode similar to serialize process.
@@ -75,7 +76,7 @@ func GetBook(w http.ResponseWriter, r *http.Request) {
 	err := collection.FindOne(context.TODO(), filter).Decode(&book)
 
 	if err != nil {
-		db.GetError(err, w)
+		getError(err, w, http.StatusNotFound)
 		return
 	}
 
@@ -97,7 +98,7 @@ func CreateBook(w http.ResponseWriter, r *http.Request) {
 	result, err := collection.InsertOne(context.TODO(), book)
 
 	if err != nil {
-		db.GetError(err, w)
+		getError(err, w, http.StatusInternalServerError)
 		return
 	}
 
@@ -137,7 +138,7 @@ func UpdateBook(w http.ResponseWriter, r *http.Request) {
 	err := collection.FindOneAndUpdate(context.TODO(), filter, update).Decode(&book)
 
 	if err != nil {
-		db.GetError(err, w)
+		getError(err, w, http.StatusNotFound)
 		return
 	}
 
@@ -164,9 +165,22 @@ func DeleteBook(w http.ResponseWriter, r *http.Request) {
 	deleteResult, err := collection.DeleteOne(context.TODO(), filter)
 
 	if err != nil {
-		db.GetError(err, w)
+		getError(err, w, http.StatusNotFound)
 		return
 	}
 
 	json.NewEncoder(w).Encode(deleteResult)
+}
+
+func getError(err error, w http.ResponseWriter, status int) {
+	log.Println(err.Error())
+	var response = dto.ErrorResponse{
+		ErrorMessage: err.Error(),
+		StatusCode:   status,
+	}
+
+	message, _ := json.Marshal(response)
+
+	w.WriteHeader(response.StatusCode)
+	w.Write(message)
 }
