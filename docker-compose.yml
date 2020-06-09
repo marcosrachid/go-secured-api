@@ -1,0 +1,57 @@
+version: '3'
+
+networks:
+  basic:
+
+services:
+
+  mongo:
+    image: mongo:4.0.16
+    container_name: mongo
+    restart: always
+    environment:
+        - MONGO_DATA_DIR=/data/db
+        - MONGO_LOG_DIR=/dev/null
+        - MONGO_INITDB_ROOT_USERNAME=mongo
+        - MONGO_INITDB_ROOT_PASSWORD=mongo
+        - MONGO_INITDB_DATABASE=go-template
+    ports: 
+        - 27017:27017
+    volumes: 
+        - ./mongodata:/data/db
+    command: --logpath=/dev/null
+    networks:
+        - basic
+
+  keycloak:
+    image: jboss/keycloak
+    environment:
+      - KEYCLOAK_USER=admin
+      - KEYCLOAK_PASSWORD=admin
+      # - KEYCLOAK_IMPORT=/tmp/realm-export.json
+      - DB_VENDOR=h2
+      - DB_DATABASE=keycloak
+      - DB_USER=keycloak
+      - DB_PASSWORD=password
+    ports:
+      - "8080:8080"
+    # volumes:
+    #   - ./keycloak/realm-export.json:/tmp/realm-export.json
+    networks:
+      - basic
+
+  api:
+    build:
+      context: .
+      dockerfile: .
+    restart: unless-stopped
+    environment:
+      - PORT=9090
+      - MONGO_URI="mongodb://mongo:mongo@mongo:27017"
+      - DATABASE="go-template"
+    ports:
+      - '9090:9090'
+    expose:
+      - '9090'
+    networks:
+      - basic
