@@ -12,6 +12,14 @@ import (
 	"github.com/marcosrachid/go-secured-api/pkg/utils"
 )
 
+type RealmAccess struct {
+	RealmAccess Roles `json:"realm_access"`
+}
+
+type Roles struct {
+	Roles []string `json:"roles"`
+}
+
 const (
 	KEYCLOAK_AUTH_URL  = "http://localhost:8080/auth"
 	KEYCLOAK_REALM     = "go"
@@ -34,7 +42,13 @@ func IsAuthorized(verifier *oidc.IDTokenVerifier, role string, endpoint func(htt
 			response.GetClientError(errors.New("Unauthorized"), w, http.StatusUnauthorized)
 			return
 		}
-		log.Println(token)
+
+		var realmAccess RealmAccess
+		if err = token.Claims(&realmAccess); !utils.Contains(realmAccess.RealmAccess.Roles, role) {
+			log.Printf("missing role: %s in %v\n", role, realmAccess)
+			response.GetClientError(errors.New("Unauthorized"), w, http.StatusUnauthorized)
+			return
+		}
 
 		endpoint(w, r)
 	})
