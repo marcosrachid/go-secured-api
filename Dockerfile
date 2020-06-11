@@ -1,6 +1,6 @@
 FROM golang:1.14.3-alpine as builder
 
-WORKDIR /go/src/go-secured-api
+WORKDIR /go/src/github.com/marcosrachid/go-secured-api
 
 COPY go.mod go.sum ./
 
@@ -25,7 +25,7 @@ RUN apk --no-cache add ca-certificates
 
 WORKDIR /root/
 
-COPY --from=builder /go/src/go-secured-api/api .
+COPY --from=builder /go/src/github.com/marcosrachid/go-secured-api/api .
 
 EXPOSE 9090
 

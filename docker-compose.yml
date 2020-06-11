@@ -28,27 +28,27 @@ services:
     environment:
       - KEYCLOAK_USER=admin
       - KEYCLOAK_PASSWORD=admin
-      # - KEYCLOAK_IMPORT=/tmp/realm-export.json
+      - KEYCLOAK_IMPORT=/tmp/realm-export.json
       - DB_VENDOR=h2
       - DB_DATABASE=keycloak
       - DB_USER=keycloak
       - DB_PASSWORD=password
     ports:
       - "8080:8080"
-    # volumes:
-    #   - ./keycloak/realm-export.json:/tmp/realm-export.json
+    volumes:
+      - ./keycloak/realm-export.json:/tmp/realm-export.json
     networks:
       - basic
 
   api:
     build:
       context: .
-      dockerfile: .
+      dockerfile: Dockerfile
     restart: unless-stopped
     environment:
       - PORT=9090
-      - MONGO_URI="mongodb://mongo:mongo@mongo:27017"
-      - DATABASE="go-template"
+      - MONGO_URI=mongodb://mongo:mongo@mongo:27017
+      - DATABASE=go-template
     ports:
       - '9090:9090'
     expose:
