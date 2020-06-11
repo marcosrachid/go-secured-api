@@ -49,9 +49,12 @@ services:
       - PORT=9090
       - MONGO_URI=mongodb://mongo:mongo@mongo:27017
       - DATABASE=go-template
+      - KEYCLOAK_AUTH_URL=http://keycloak:8080/auth
     ports:
       - '9090:9090'
     expose:
       - '9090'
+    depends_on:
+      - keycloak
     networks:
       - basic
