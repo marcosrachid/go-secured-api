@@ -7,8 +7,8 @@ import (
 	"net/http"
 
 	"github.com/marcosrachid/go-secured-api/internal/db"
-	"github.com/marcosrachid/go-secured-api/internal/models/dto"
 	"github.com/marcosrachid/go-secured-api/internal/models/repository"
+	"github.com/marcosrachid/go-secured-api/pkg/response"
 
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/bson"
@@ -28,7 +28,7 @@ func GetBooks(w http.ResponseWriter, r *http.Request) {
 	cur, err := collection.Find(context.TODO(), bson.M{})
 
 	if err != nil {
-		getError(err, w, http.StatusInternalServerError)
+		response.GetError(err, w, http.StatusInternalServerError)
 		return
 	}
 
@@ -52,16 +52,13 @@ func GetBooks(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := cur.Err(); err != nil {
-		getError(err, w, http.StatusInternalServerError)
+		response.GetError(err, w, http.StatusInternalServerError)
 	}
 
-	json.NewEncoder(w).Encode(books) // encode similar to serialize process.
+	response.GetResponse(books, w, http.StatusOK)
 }
 
 func GetBook(w http.ResponseWriter, r *http.Request) {
-	// set header.
-	w.Header().Set("Content-Type", "application/json")
-
 	var book repository.Book
 	// we get params with mux.
 	var params = mux.Vars(r)
@@ -76,16 +73,14 @@ func GetBook(w http.ResponseWriter, r *http.Request) {
 	err := collection.FindOne(context.TODO(), filter).Decode(&book)
 
 	if err != nil {
-		getError(err, w, http.StatusNotFound)
+		response.GetError(err, w, http.StatusNotFound)
 		return
 	}
 
-	json.NewEncoder(w).Encode(book)
+	response.GetResponse(book, w, http.StatusOK)
 }
 
 func CreateBook(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
 	var book repository.Book
 
 	// we decode our body request params
@@ -98,16 +93,14 @@ func CreateBook(w http.ResponseWriter, r *http.Request) {
 	result, err := collection.InsertOne(context.TODO(), book)
 
 	if err != nil {
-		getError(err, w, http.StatusInternalServerError)
+		response.GetError(err, w, http.StatusInternalServerError)
 		return
 	}
 
-	json.NewEncoder(w).Encode(result)
+	response.GetResponse(result, w, http.StatusCreated)
 }
 
 func UpdateBook(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
 	var params = mux.Vars(r)
 
 	//Get id from parameters
@@ -138,19 +131,16 @@ func UpdateBook(w http.ResponseWriter, r *http.Request) {
 	err := collection.FindOneAndUpdate(context.TODO(), filter, update).Decode(&book)
 
 	if err != nil {
-		getError(err, w, http.StatusNotFound)
+		response.GetError(err, w, http.StatusNotFound)
 		return
 	}
 
 	book.ID = id
 
-	json.NewEncoder(w).Encode(book)
+	response.GetResponse(book, w, http.StatusAccepted)
 }
 
 func DeleteBook(w http.ResponseWriter, r *http.Request) {
-	// Set header
-	w.Header().Set("Content-Type", "application/json")
-
 	// get params
 	var params = mux.Vars(r)
 
@@ -165,22 +155,9 @@ func DeleteBook(w http.ResponseWriter, r *http.Request) {
 	deleteResult, err := collection.DeleteOne(context.TODO(), filter)
 
 	if err != nil {
-		getError(err, w, http.StatusNotFound)
+		response.GetError(err, w, http.StatusNotFound)
 		return
 	}
 
-	json.NewEncoder(w).Encode(deleteResult)
-}
-
-func getError(err error, w http.ResponseWriter, status int) {
-	log.Println(err.Error())
-	var response = dto.ErrorResponse{
-		ErrorMessage: err.Error(),
-		StatusCode:   status,
-	}
-
-	message, _ := json.Marshal(response)
-
-	w.WriteHeader(response.StatusCode)
-	w.Write(message)
+	response.GetResponse(deleteResult, w, http.StatusAccepted)
 }

@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/marcosrachid/go-secured-api/internal/api"
+	"github.com/marcosrachid/go-secured-api/pkg/oauth2"
 	"github.com/marcosrachid/go-secured-api/pkg/utils"
 
 	"github.com/gorilla/mux"
@@ -19,11 +20,11 @@ func main() {
 	r := mux.NewRouter()
 
 	// arrange our route
-	r.HandleFunc("/api/books", api.GetBooks).Methods("GET")
-	r.HandleFunc("/api/books/{id}", api.GetBook).Methods("GET")
-	r.HandleFunc("/api/books", api.CreateBook).Methods("POST")
-	r.HandleFunc("/api/books/{id}", api.UpdateBook).Methods("PUT")
-	r.HandleFunc("/api/books/{id}", api.DeleteBook).Methods("DELETE")
+	r.Handle("/api/books", oauth2.IsAuthorized("list-books", api.GetBooks)).Methods("GET")
+	r.Handle("/api/books/{id}", oauth2.IsAuthorized("get-book", api.GetBook)).Methods("GET")
+	r.Handle("/api/books", oauth2.IsAuthorized("create-book", api.CreateBook)).Methods("POST")
+	r.Handle("/api/books/{id}", oauth2.IsAuthorized("update-book", api.UpdateBook)).Methods("PUT")
+	r.Handle("/api/books/{id}", oauth2.IsAuthorized("delete-book", api.DeleteBook)).Methods("DELETE")
 
 	// set our port address
 	log.Printf("Serving at localhost:%s...\n", utils.GetenvDefault("PORT", PORT))
