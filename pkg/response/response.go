@@ -28,7 +28,7 @@ func GetResponse(data interface{}, w http.ResponseWriter, status int) {
 	w.Write(message)
 }
 
-func GetError(err error, w http.ResponseWriter, status int) {
+func GetClientError(err error, w http.ResponseWriter, status int) {
 	// set header.
 	w.Header().Set("Content-Type", "application/json")
 
@@ -36,6 +36,22 @@ func GetError(err error, w http.ResponseWriter, status int) {
 	var response = ErrorResponse{
 		ErrorMessage: err.Error(),
 		StatusCode:   status,
+	}
+
+	message, _ := json.Marshal(response)
+
+	w.WriteHeader(response.StatusCode)
+	w.Write(message)
+}
+
+func GetServerError(err error, w http.ResponseWriter) {
+	// set header.
+	w.Header().Set("Content-Type", "application/json")
+
+	log.Println(err.Error())
+	var response = ErrorResponse{
+		ErrorMessage: "Server in maintenance, please contact your administrator",
+		StatusCode:   http.StatusInternalServerError,
 	}
 
 	message, _ := json.Marshal(response)

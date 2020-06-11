@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/marcosrachid/go-secured-api/internal/db"
@@ -16,8 +15,6 @@ import (
 )
 
 func GetBooks(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
 	// we created Book array
 	var books []repository.Book
 
@@ -28,7 +25,7 @@ func GetBooks(w http.ResponseWriter, r *http.Request) {
 	cur, err := collection.Find(context.TODO(), bson.M{})
 
 	if err != nil {
-		response.GetError(err, w, http.StatusInternalServerError)
+		response.GetServerError(err, w)
 		return
 	}
 
@@ -44,7 +41,7 @@ func GetBooks(w http.ResponseWriter, r *http.Request) {
 		// & character returns the memory address of the following variable.
 		err := cur.Decode(&book) // decode similar to deserialize process.
 		if err != nil {
-			log.Fatal(err)
+			response.GetServerError(err, w)
 		}
 
 		// add item our array
@@ -52,7 +49,7 @@ func GetBooks(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := cur.Err(); err != nil {
-		response.GetError(err, w, http.StatusInternalServerError)
+		response.GetServerError(err, w)
 	}
 
 	response.GetResponse(books, w, http.StatusOK)
@@ -73,7 +70,7 @@ func GetBook(w http.ResponseWriter, r *http.Request) {
 	err := collection.FindOne(context.TODO(), filter).Decode(&book)
 
 	if err != nil {
-		response.GetError(err, w, http.StatusNotFound)
+		response.GetClientError(err, w, http.StatusNotFound)
 		return
 	}
 
@@ -93,7 +90,7 @@ func CreateBook(w http.ResponseWriter, r *http.Request) {
 	result, err := collection.InsertOne(context.TODO(), book)
 
 	if err != nil {
-		response.GetError(err, w, http.StatusInternalServerError)
+		response.GetServerError(err, w)
 		return
 	}
 
@@ -131,7 +128,7 @@ func UpdateBook(w http.ResponseWriter, r *http.Request) {
 	err := collection.FindOneAndUpdate(context.TODO(), filter, update).Decode(&book)
 
 	if err != nil {
-		response.GetError(err, w, http.StatusNotFound)
+		response.GetClientError(err, w, http.StatusNotFound)
 		return
 	}
 
@@ -155,7 +152,7 @@ func DeleteBook(w http.ResponseWriter, r *http.Request) {
 	deleteResult, err := collection.DeleteOne(context.TODO(), filter)
 
 	if err != nil {
-		response.GetError(err, w, http.StatusNotFound)
+		response.GetClientError(err, w, http.StatusNotFound)
 		return
 	}
 
