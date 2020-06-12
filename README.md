@@ -41,3 +41,6 @@ To run the chat server we create a docker container for it
 | PORT | Server Port | 9090 |
 | MONGO_URI | Mongo DB Connection URI | mongodb://mongo:mongo@mongo:27017 |
 | DATABASE | Mongo DB Application Database Name | go-template |
+| KEYCLOAK_AUTH_URL | Keycloak auth url | http://localhost:8080/auth |
+| KEYCLOAK_REALM | Keycloak realm | go |
+| KEYCLOAK_CLIENT_ID | Keycloak client id | go-sso |
